@@ -39,6 +39,13 @@ api.interceptors.response.use(
 // Auth API
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
+  logout: () => {
+    // Remove token from localStorage
+    localStorage.removeItem('adminToken');
+    // Optionally call backend logout endpoint if available
+    // return api.post('/auth/logout');
+    return Promise.resolve({ success: true, message: 'Logged out successfully' });
+  }
 };
 
 // Loan Applications API

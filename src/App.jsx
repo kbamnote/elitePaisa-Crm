@@ -20,11 +20,27 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// Public Route Component for Login
+const PublicRoute = ({ children }) => {
+  const token = localStorage.getItem('adminToken');
+  const isAuthenticated = !!token;
+  
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
+};
+
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        } />
         <Route 
           path="/*" 
           element={

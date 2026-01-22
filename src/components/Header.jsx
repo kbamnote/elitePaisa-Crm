@@ -1,12 +1,19 @@
-import { useState } from 'react';
 import { BellIcon, MagnifyingGlassIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { authAPI } from '../services/api';
 
 const Header = ({ toggleSidebar }) => {
-  const handleLogout = () => {
-    // Clear the authentication token
-    localStorage.removeItem('adminToken');
-    // Redirect to login page
-    window.location.href = '/login';
+  const handleLogout = async () => {
+    try {
+      // Call the logout API function
+      await authAPI.logout();
+      // Redirect to login page
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if there's an error, clear the token and redirect
+      localStorage.removeItem('adminToken');
+      window.location.href = '/login';
+    }
   };
   
   return (

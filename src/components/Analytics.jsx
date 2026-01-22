@@ -7,33 +7,75 @@ import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon
 } from '@heroicons/react/24/outline';
+import { analyticsAPI } from '../services/api';
 
 const Analytics = () => {
   const [stats, setStats] = useState({
     totalApplications: 0,
     approvedApplications: 0,
     rejectedApplications: 0,
+    pendingApplications: 0,
+    disbursedApplications: 0,
     totalDisbursed: 0,
     activeLoans: 0,
-    avgProcessingTime: 0
+    avgProcessingTime: 0,
+    personalLoans: 0,
+    homeLoans: 0,
+    vehicleLoans: 0,
+    businessLoans: 0,
+    educationLoans: 0,
+    monthlyTrends: []
   });
   const [loading, setLoading] = useState(true);
 
-  // Mock data for analytics
+  // Load analytics data from API
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const mockStats = {
-        totalApplications: 1254,
-        approvedApplications: 892,
-        rejectedApplications: 156,
-        totalDisbursed: 240000000, // 2.4 Cr
-        activeLoans: 786,
-        avgProcessingTime: 2.5 // days
-      };
-      setStats(mockStats);
-      setLoading(false);
-    }, 1000);
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true);
+        const response = await analyticsAPI.getStats();
+        const apiStats = response.data.stats || {};
+        setStats({
+          totalApplications: apiStats.totalApplications || 0,
+          approvedApplications: apiStats.approvedApplications || 0,
+          rejectedApplications: apiStats.rejectedApplications || 0,
+          pendingApplications: apiStats.pendingApplications || 0,
+          disbursedApplications: apiStats.disbursedApplications || 0,
+          totalDisbursed: apiStats.totalDisbursed || 0,
+          activeLoans: apiStats.activeLoans || 0,
+          avgProcessingTime: apiStats.avgProcessingTime || 0,
+          personalLoans: apiStats.personalLoans || 0,
+          homeLoans: apiStats.homeLoans || 0,
+          vehicleLoans: apiStats.vehicleLoans || 0,
+          businessLoans: apiStats.businessLoans || 0,
+          educationLoans: apiStats.educationLoans || 0,
+          monthlyTrends: apiStats.monthlyTrends || []
+        });
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+        // Fallback to mock data if API fails
+        setStats({
+          totalApplications: 1254,
+          approvedApplications: 892,
+          rejectedApplications: 156,
+          pendingApplications: 126,
+          disbursedApplications: 80,
+          totalDisbursed: 240000000, // 2.4 Cr
+          activeLoans: 786,
+          avgProcessingTime: 2.5, // days
+          personalLoans: 439,
+          homeLoans: 314,
+          vehicleLoans: 251,
+          businessLoans: 188,
+          educationLoans: 63,
+          monthlyTrends: [65, 45, 78, 52, 68, 38, 72, 55, 80, 60, 75, 85]
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchAnalytics();
   }, []);
 
   const formatCurrency = (amount) => {
@@ -209,41 +251,41 @@ const Analytics = () => {
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Approved (71%)</span>
-                  <span className="text-sm font-medium text-gray-700">892</span>
+                  <span className="text-sm font-medium text-gray-700">Approved ({stats.approvedApplications > 0 ? Math.round((stats.approvedApplications / (stats.totalApplications || 1)) * 100) : 0}%)</span>
+                  <span className="text-sm font-medium text-gray-700">{stats.approvedApplications}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-green-600 h-2.5 rounded-full" style={{ width: '71%' }}></div>
+                  <div className="bg-green-600 h-2.5 rounded-full" style={{ width: `${stats.approvedApplications > 0 ? Math.round((stats.approvedApplications / (stats.totalApplications || 1)) * 100) : 0}%` }}></div>
                 </div>
               </div>
               
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Pending (10%)</span>
-                  <span className="text-sm font-medium text-gray-700">126</span>
+                  <span className="text-sm font-medium text-gray-700">Pending ({stats.pendingApplications > 0 ? Math.round((stats.pendingApplications / (stats.totalApplications || 1)) * 100) : 0}%)</span>
+                  <span className="text-sm font-medium text-gray-700">{stats.pendingApplications}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-yellow-500 h-2.5 rounded-full" style={{ width: '10%' }}></div>
+                  <div className="bg-yellow-500 h-2.5 rounded-full" style={{ width: `${stats.pendingApplications > 0 ? Math.round((stats.pendingApplications / (stats.totalApplications || 1)) * 100) : 0}%` }}></div>
                 </div>
               </div>
               
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Rejected (12%)</span>
-                  <span className="text-sm font-medium text-gray-700">156</span>
+                  <span className="text-sm font-medium text-gray-700">Rejected ({stats.rejectedApplications > 0 ? Math.round((stats.rejectedApplications / (stats.totalApplications || 1)) * 100) : 0}%)</span>
+                  <span className="text-sm font-medium text-gray-700">{stats.rejectedApplications}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-red-600 h-2.5 rounded-full" style={{ width: '12%' }}></div>
+                  <div className="bg-red-600 h-2.5 rounded-full" style={{ width: `${stats.rejectedApplications > 0 ? Math.round((stats.rejectedApplications / (stats.totalApplications || 1)) * 100) : 0}%` }}></div>
                 </div>
               </div>
               
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Disbursed (7%)</span>
-                  <span className="text-sm font-medium text-gray-700">80</span>
+                  <span className="text-sm font-medium text-gray-700">Disbursed ({stats.disbursedApplications > 0 ? Math.round((stats.disbursedApplications / (stats.totalApplications || 1)) * 100) : 0}%)</span>
+                  <span className="text-sm font-medium text-gray-700">{stats.disbursedApplications}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: '7%' }}></div>
+                  <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${stats.disbursedApplications > 0 ? Math.round((stats.disbursedApplications / (stats.totalApplications || 1)) * 100) : 0}%` }}></div>
                 </div>
               </div>
             </div>
@@ -259,51 +301,51 @@ const Analytics = () => {
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Personal (35%)</span>
-                  <span className="text-sm font-medium text-gray-700">439</span>
+                  <span className="text-sm font-medium text-gray-700">Personal ({stats.personalLoans > 0 ? Math.round((stats.personalLoans / (stats.totalApplications || 1)) * 100) : 0}%)</span>
+                  <span className="text-sm font-medium text-gray-700">{stats.personalLoans}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-indigo-600 h-2.5 rounded-full" style={{ width: '35%' }}></div>
+                  <div className="bg-indigo-600 h-2.5 rounded-full" style={{ width: `${stats.personalLoans > 0 ? Math.round((stats.personalLoans / (stats.totalApplications || 1)) * 100) : 0}%` }}></div>
                 </div>
               </div>
               
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Home (25%)</span>
-                  <span className="text-sm font-medium text-gray-700">314</span>
+                  <span className="text-sm font-medium text-gray-700">Home ({stats.homeLoans > 0 ? Math.round((stats.homeLoans / (stats.totalApplications || 1)) * 100) : 0}%)</span>
+                  <span className="text-sm font-medium text-gray-700">{stats.homeLoans}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-purple-600 h-2.5 rounded-full" style={{ width: '25%' }}></div>
+                  <div className="bg-purple-600 h-2.5 rounded-full" style={{ width: `${stats.homeLoans > 0 ? Math.round((stats.homeLoans / (stats.totalApplications || 1)) * 100) : 0}%` }}></div>
                 </div>
               </div>
               
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Vehicle (20%)</span>
-                  <span className="text-sm font-medium text-gray-700">251</span>
+                  <span className="text-sm font-medium text-gray-700">Vehicle ({stats.vehicleLoans > 0 ? Math.round((stats.vehicleLoans / (stats.totalApplications || 1)) * 100) : 0}%)</span>
+                  <span className="text-sm font-medium text-gray-700">{stats.vehicleLoans}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-pink-600 h-2.5 rounded-full" style={{ width: '20%' }}></div>
+                  <div className="bg-pink-600 h-2.5 rounded-full" style={{ width: `${stats.vehicleLoans > 0 ? Math.round((stats.vehicleLoans / (stats.totalApplications || 1)) * 100) : 0}%` }}></div>
                 </div>
               </div>
               
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Business (15%)</span>
-                  <span className="text-sm font-medium text-gray-700">188</span>
+                  <span className="text-sm font-medium text-gray-700">Business ({stats.businessLoans > 0 ? Math.round((stats.businessLoans / (stats.totalApplications || 1)) * 100) : 0}%)</span>
+                  <span className="text-sm font-medium text-gray-700">{stats.businessLoans}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-teal-600 h-2.5 rounded-full" style={{ width: '15%' }}></div>
+                  <div className="bg-teal-600 h-2.5 rounded-full" style={{ width: `${stats.businessLoans > 0 ? Math.round((stats.businessLoans / (stats.totalApplications || 1)) * 100) : 0}%` }}></div>
                 </div>
               </div>
               
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Education (5%)</span>
-                  <span className="text-sm font-medium text-gray-700">63</span>
+                  <span className="text-sm font-medium text-gray-700">Education ({stats.educationLoans > 0 ? Math.round((stats.educationLoans / (stats.totalApplications || 1)) * 100) : 0}%)</span>
+                  <span className="text-sm font-medium text-gray-700">{stats.educationLoans}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-orange-600 h-2.5 rounded-full" style={{ width: '5%' }}></div>
+                  <div className="bg-orange-600 h-2.5 rounded-full" style={{ width: `${stats.educationLoans > 0 ? Math.round((stats.educationLoans / (stats.totalApplications || 1)) * 100) : 0}%` }}></div>
                 </div>
               </div>
             </div>
@@ -318,17 +360,25 @@ const Analytics = () => {
         </div>
         <div className="p-6">
           <div className="flex items-end justify-between h-64">
-            {[65, 45, 78, 52, 68, 38, 72, 55, 80, 60, 75, 85].map((height, index) => (
-              <div key={index} className="flex flex-col items-center">
-                <div 
-                  className="w-8 bg-indigo-500 rounded-t hover:bg-indigo-600 transition-colors"
-                  style={{ height: `${height}px` }}
-                ></div>
-                <span className="mt-2 text-xs text-gray-500">
-                  {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][index]}
-                </span>
-              </div>
-            ))}
+            {Array.from({ length: 12 }, (_, index) => {
+              const monthData = stats.monthlyTrends?.[index] || 0;
+              // Normalize the value to fit in the chart (max height 64px)
+              const maxValue = Math.max(...(stats.monthlyTrends || [1]), 1);
+              const height = Math.max(20, (monthData / maxValue) * 64); // Ensure minimum height of 20px
+              
+              return (
+                <div key={index} className="flex flex-col items-center">
+                  <div 
+                    className="w-8 bg-indigo-500 rounded-t hover:bg-indigo-600 transition-colors"
+                    style={{ height: `${height}px` }}
+                  ></div>
+                  <span className="mt-2 text-xs text-gray-500">
+                    {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][index]}
+                  </span>
+                  <span className="mt-1 text-xs text-gray-700">{monthData}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

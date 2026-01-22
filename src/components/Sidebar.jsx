@@ -22,6 +22,32 @@ const Sidebar = () => {
     { name: 'Settings', href: '/settings', icon: CogIcon },
   ];
 
+  // Get admin user info from localStorage or fallback to default
+  const token = localStorage.getItem('adminToken');
+  let adminName = 'Admin User';
+  let adminEmail = 'admin@elitepaisa.com';
+  
+  if (token) {
+    try {
+      // Decode JWT payload (second part)
+      const tokenParts = token.split('.');
+      if (tokenParts.length === 3) {
+        const payload = JSON.parse(atob(tokenParts[1]));
+        adminName = payload.user?.fullName || payload.fullName || 'Admin User';
+        adminEmail = payload.user?.email || payload.email || 'admin@elitepaisa.com';
+      }
+    } catch (error) {
+      console.warn('Failed to decode token:', error);
+    }
+  }
+  
+  const initials = adminName
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
+  
   return (
     <div className="flex h-full w-full flex-col bg-indigo-700 text-white">
       {/* Logo */}
@@ -57,11 +83,11 @@ const Sidebar = () => {
       <div className="border-t border-indigo-600 p-4">
         <div className="flex items-center">
           <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center font-semibold">
-            A
+            {initials}
           </div>
           <div className="ml-3">
-            <p className="text-sm font-medium text-white">Admin User</p>
-            <p className="text-xs text-indigo-200">admin@elitepaisa.com</p>
+            <p className="text-sm font-medium text-white">{adminName}</p>
+            <p className="text-xs text-indigo-200">{adminEmail}</p>
           </div>
         </div>
       </div>
