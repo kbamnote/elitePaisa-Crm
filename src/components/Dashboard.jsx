@@ -112,86 +112,42 @@ const Dashboard = () => {
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         
-        // Fallback to mock data if API fails
-        const mockStats = [
+        // Set empty arrays on error
+        setStats([
           {
             title: 'Total Applications',
-            value: '1,254',
-            change: '+12%',
+            value: '0',
+            change: '+0%',
             changeType: 'positive',
             icon: DocumentTextIcon,
             color: 'bg-blue-500',
           },
           {
             title: 'Active Loans',
-            value: '892',
-            change: '+8%',
+            value: '0',
+            change: '+0%',
             changeType: 'positive',
             icon: CreditCardIcon,
             color: 'bg-green-500',
           },
           {
             title: 'Total Disbursed',
-            value: '₹2.4Cr',
-            change: '+15%',
+            value: '₹0',
+            change: '+0%',
             changeType: 'positive',
             icon: BanknotesIcon,
             color: 'bg-purple-500',
           },
           {
             title: 'Pending Approvals',
-            value: '42',
-            change: '-3%',
+            value: '0',
+            change: '-0%',
             changeType: 'negative',
             icon: ChartBarIcon,
             color: 'bg-yellow-500',
           },
-        ];
-        setStats(mockStats);
-        
-        const mockApplications = [
-          {
-            id: 'LA001',
-            customer: 'John Doe',
-            loanType: 'Personal Loan',
-            amount: '₹5,00,000',
-            status: 'Approved',
-            date: '2026-01-22',
-          },
-          {
-            id: 'LA002',
-            customer: 'Jane Smith',
-            loanType: 'Home Loan',
-            amount: '₹45,00,000',
-            status: 'Pending',
-            date: '2026-01-22',
-          },
-          {
-            id: 'LA003',
-            customer: 'Robert Johnson',
-            loanType: 'Vehicle Loan',
-            amount: '₹8,50,000',
-            status: 'Disbursed',
-            date: '2026-01-21',
-          },
-          {
-            id: 'LA004',
-            customer: 'Emily Davis',
-            loanType: 'Business Loan',
-            amount: '₹12,00,000',
-            status: 'Rejected',
-            date: '2026-01-21',
-          },
-          {
-            id: 'LA005',
-            customer: 'Michael Brown',
-            loanType: 'Education Loan',
-            amount: '₹3,20,000',
-            status: 'Pending',
-            date: '2026-01-20',
-          },
-        ];
-        setRecentApplications(mockApplications);
+        ]);
+        setRecentApplications([]);
       } finally {
         setIsLoading(false);
       }

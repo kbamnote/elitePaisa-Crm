@@ -53,22 +53,22 @@ const Analytics = () => {
         });
       } catch (error) {
         console.error('Error fetching analytics:', error);
-        // Fallback to mock data if API fails
+        // Set empty/default values on error
         setStats({
-          totalApplications: 1254,
-          approvedApplications: 892,
-          rejectedApplications: 156,
-          pendingApplications: 126,
-          disbursedApplications: 80,
-          totalDisbursed: 240000000, // 2.4 Cr
-          activeLoans: 786,
-          avgProcessingTime: 2.5, // days
-          personalLoans: 439,
-          homeLoans: 314,
-          vehicleLoans: 251,
-          businessLoans: 188,
-          educationLoans: 63,
-          monthlyTrends: [65, 45, 78, 52, 68, 38, 72, 55, 80, 60, 75, 85]
+          totalApplications: 0,
+          approvedApplications: 0,
+          rejectedApplications: 0,
+          pendingApplications: 0,
+          disbursedApplications: 0,
+          totalDisbursed: 0,
+          activeLoans: 0,
+          avgProcessingTime: 0,
+          personalLoans: 0,
+          homeLoans: 0,
+          vehicleLoans: 0,
+          businessLoans: 0,
+          educationLoans: 0,
+          monthlyTrends: []
         });
       } finally {
         setLoading(false);

@@ -29,6 +29,8 @@ const LoanApplications = () => {
         setApplications(response.data.loanApplications || []);
       } catch (error) {
         console.error('Error fetching loan applications:', error);
+        // Set empty array on error
+        setApplications([]);
       } finally {
         setLoading(false);
       }

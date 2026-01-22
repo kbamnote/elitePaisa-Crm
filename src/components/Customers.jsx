@@ -21,10 +21,19 @@ const Customers = () => {
     const fetchCustomers = async () => {
       try {
         setLoading(true);
+        console.log('Fetching customers with filters:', filters);
+        // Fetch users from the new profile endpoint
         const response = await customersAPI.getAll(filters);
-        setCustomers(response.data.customers || []);
+        console.log('API Response:', response);
+        // Handle the response structure: { success: true, profiles: [...] }
+        const userData = response.data.profiles || [];
+        console.log('Setting customers data:', userData);
+        setCustomers(userData);
       } catch (error) {
         console.error('Error fetching customers:', error);
+        console.error('Error details:', error.response || error.message);
+        // Set empty array on error
+        setCustomers([]);
       } finally {
         setLoading(false);
       }
@@ -39,7 +48,8 @@ const Customers = () => {
       const searchLower = filters.search.toLowerCase();
       if (!customer.fullName?.toLowerCase().includes(searchLower) &&
           !customer.email?.toLowerCase().includes(searchLower) &&
-          !customer.phoneNo?.includes(filters.search)) {
+          !customer.phoneNo?.includes(filters.search) &&
+          !customer.authId?.email?.toLowerCase().includes(searchLower)) {
         return false;
       }
     }
@@ -92,8 +102,8 @@ const Customers = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
-        <p className="mt-1 text-sm text-gray-500">Manage all registered customers</p>
+        <h1 className="text-2xl font-bold text-gray-900">Users & Customers</h1>
+        <p className="mt-1 text-sm text-gray-500">Manage all registered users and customers</p>
       </div>
 
       {/* Search */}
@@ -119,7 +129,7 @@ const Customers = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
+                  User/Customer
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Contact
@@ -131,7 +141,7 @@ const Customers = () => {
                   Address
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Loan Summary
+                  Activity
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -140,51 +150,51 @@ const Customers = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredCustomersData.length > 0 ? (
-                filteredCustomersData.map((customer) => (
-                  <tr key={customer._id} className="hover:bg-gray-50">
+                filteredCustomersData.map((customer, index) => (
+                  <tr key={customer._id || customer.id || customer.authId?._id || customer.authId?.id || index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
                           <UserCircleIcon className="h-10 w-10 text-gray-400" />
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{customer.fullName}</div>
-                          <div className="text-sm text-gray-500">{customer._id}</div>
-                          <div className="text-sm text-gray-500">Registered: {formatDate(customer.createdAt)}</div>
+                          <div className="text-sm font-medium text-gray-900">{customer.fullName || customer.name || customer.authId?.fullName || customer.authId?.name || 'N/A'}</div>
+                          <div className="text-sm text-gray-500">{customer._id || customer.id || customer.authId?._id || customer.authId?.id || 'N/A'}</div>
+                          <div className="text-sm text-gray-500">Registered: {formatDate(customer.createdAt || customer.registeredAt || customer.authId?.createdAt || customer.authId?.registeredAt || 'N/A')}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 flex items-center">
                         <EnvelopeIcon className="h-4 w-4 mr-1 text-gray-400" />
-                        {customer.email}
+                        {customer.email || customer.authId?.email || 'N/A'}
                       </div>
                       <div className="text-sm text-gray-500 flex items-center mt-1">
                         <PhoneIcon className="h-4 w-4 mr-1 text-gray-400" />
-                        {customer.phoneNo}
+                        {customer.phoneNo || customer.phoneNumber || customer.authId?.phoneNo || customer.authId?.phoneNumber || 'N/A'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">PAN: {customer.panNo}</div>
-                      <div className="text-sm text-gray-500">Aadhaar: {customer.adharNo?.replace(/(\d{4})/g, '$1 ')}</div>
+                      <div className="text-sm text-gray-900">PAN: {customer.panNo || customer.panNumber || customer.authId?.panNo || customer.authId?.panNumber || 'N/A'}</div>
+                      <div className="text-sm text-gray-500">Aadhaar: {(customer.adharNo || customer.aadhaarNumber || customer.authId?.adharNo || customer.authId?.aadhaarNumber)?.replace(/(\d{4})/g, '$1 ') || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 flex items-center">
                         <MapPinIcon className="h-4 w-4 mr-1 text-gray-400" />
-                        {customer.address?.addressLine}
+                        {customer.address?.addressLine || customer.address?.fullAddress || customer.authId?.address?.addressLine || customer.authId?.address?.fullAddress || 'N/A'}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {customer.address?.city}, {customer.address?.state} - {customer.address?.pincode}
+                        {customer.address?.city || customer.authId?.address?.city || 'N/A'}, {customer.address?.state || customer.authId?.address?.state || 'N/A'} - {customer.address?.pincode || customer.address?.zipCode || customer.authId?.address?.pincode || customer.authId?.address?.zipCode || 'N/A'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">Total: {customer.totalLoans}</div>
-                      <div className="text-sm text-gray-500">Active: {customer.activeLoans}</div>
-                      <div className="text-sm text-gray-900 font-medium">Disbursed: {formatCurrency(customer.totalDisbursed)}</div>
+                      <div className="text-sm text-gray-900">Total: {customer.totalLoans || customer.loanCount || 0}</div>
+                      <div className="text-sm text-gray-500">Active: {customer.activeLoans || customer.activeLoanCount || 0}</div>
+                      <div className="text-sm text-gray-900 font-medium">Disbursed: {formatCurrency(customer.totalDisbursed || customer.totalDisbursedAmount || 0)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(customer.status)}`}>
-                        {customer.status?.charAt(0).toUpperCase() + customer.status?.slice(1)}</span>
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(customer.status || customer.role || customer.authId?.status || customer.authId?.role || 'N/A')}`}>
+                        {(customer.status || customer.role || customer.authId?.status || customer.authId?.role || 'N/A')?.charAt(0).toUpperCase() + (customer.status || customer.role || customer.authId?.status || customer.authId?.role || 'N/A')?.slice(1)}</span>
                     </td>
                   </tr>
                 ))

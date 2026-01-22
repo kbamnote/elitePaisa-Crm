@@ -33,6 +33,8 @@ const LoanTypes = () => {
         setLoanTypes(response.data.loanTypes || []);
       } catch (error) {
         console.error('Error fetching loan types:', error);
+        // Set empty array on error
+        setLoanTypes([]);
       } finally {
         setLoading(false);
       }
@@ -40,6 +42,161 @@ const LoanTypes = () => {
     
     fetchLoanTypes();
   }, [JSON.stringify(filters)]); // Convert filters to string for comparison
+
+  // State for form handling
+  const [formData, setFormData] = useState({
+    loanName: '',
+    loanCategory: 'personal',
+    loanSubcategory: 'personal',
+    minAmount: '',
+    maxAmount: '',
+    interestRate: { min: '', max: '' },
+    tenure: { minMonths: '', maxMonths: '' },
+    processingFee: '',
+    eligibilityCriteria: '',
+    requiredDocuments: [],
+    status: 'active'
+  });
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name.startsWith('interestRate.') || name.startsWith('tenure.')) {
+      const [parent, child] = name.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  // Handle document input changes
+  const handleDocumentChange = (e) => {
+    const value = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      requiredDocuments: value.split(',').map(doc => doc.trim()).filter(doc => doc)
+    }));
+  };
+
+  // Open modal for adding new loan type
+  const openAddModal = () => {
+    setCurrentLoanType(null);
+    setFormData({
+      loanName: '',
+      loanCategory: 'personal',
+      loanSubcategory: 'personal',
+      minAmount: '',
+      maxAmount: '',
+      interestRate: { min: '', max: '' },
+      tenure: { minMonths: '', maxMonths: '' },
+      processingFee: '',
+      eligibilityCriteria: '',
+      requiredDocuments: [],
+      status: 'active'
+    });
+    setShowModal(true);
+  };
+
+  // Open modal for editing existing loan type
+  const openEditModal = (loanType) => {
+    setCurrentLoanType(loanType);
+    setFormData({
+      loanName: loanType.loanName || '',
+      loanCategory: loanType.loanCategory || 'personal',
+      loanSubcategory: loanType.loanSubcategory || 'personal',
+      minAmount: loanType.minAmount || '',
+      maxAmount: loanType.maxAmount || '',
+      interestRate: {
+        min: loanType.interestRate?.min || '',
+        max: loanType.interestRate?.max || ''
+      },
+      tenure: {
+        minMonths: loanType.tenure?.minMonths || '',
+        maxMonths: loanType.tenure?.maxMonths || ''
+      },
+      processingFee: loanType.processingFee || '',
+      eligibilityCriteria: loanType.eligibilityCriteria || '',
+      requiredDocuments: loanType.requiredDocuments || [],
+      status: loanType.status || 'active'
+    });
+    setShowModal(true);
+  };
+
+  // Close modal
+  const closeModal = () => {
+    setShowModal(false);
+    setCurrentLoanType(null);
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.loanName.trim()) {
+      alert('Please enter a loan name');
+      return;
+    }
+    
+    if (!formData.minAmount || !formData.maxAmount) {
+      alert('Please enter both minimum and maximum amounts');
+      return;
+    }
+    
+    if (parseFloat(formData.minAmount) > parseFloat(formData.maxAmount)) {
+      alert('Minimum amount cannot be greater than maximum amount');
+      return;
+    }
+    
+    try {
+      if (currentLoanType) {
+        // Update existing loan type
+        console.log('Updating loan type:', currentLoanType._id, formData);
+        await loanTypesAPI.update(currentLoanType._id, formData);
+      } else {
+        // Create new loan type
+        console.log('Creating loan type:', formData);
+        await loanTypesAPI.create(formData);
+      }
+      
+      // Refresh the data
+      const response = await loanTypesAPI.getAll(filters);
+      setLoanTypes(response.data.loanTypes || []);
+      
+      // Close modal
+      closeModal();
+    } catch (error) {
+      console.error('Error saving loan type:', error);
+      console.error('Error response:', error.response);
+      console.error('Error status:', error.response?.status);
+      console.error('Error data:', error.response?.data);
+      alert('Error saving loan type: ' + (error.response?.data?.message || error.message || error));
+    }
+  };
+
+  // Handle delete
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this loan type?')) {
+      try {
+        await loanTypesAPI.delete(id);
+        // Refresh the data
+        const response = await loanTypesAPI.getAll(filters);
+        setLoanTypes(response.data.loanTypes || []);
+      } catch (error) {
+        console.error('Error deleting loan type:', error);
+        alert('Error deleting loan type: ' + error.response?.data?.message || error.message);
+      }
+    }
+  };
 
   // Apply filters
   const filteredLoanTypes = loanTypes.filter(loanType => {
@@ -123,20 +280,7 @@ const LoanTypes = () => {
     });
   };
 
-  const openAddModal = () => {
-    setCurrentLoanType(null);
-    setShowModal(true);
-  };
 
-  const openEditModal = (loanType) => {
-    setCurrentLoanType(loanType);
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setCurrentLoanType(null);
-  };
 
   if (loading) {
     return (
@@ -282,7 +426,10 @@ const LoanTypes = () => {
                         <button className="text-gray-600 hover:text-gray-900">
                           <EyeIcon className="h-5 w-5" />
                         </button>
-                        <button className="text-red-600 hover:text-red-900">
+                        <button 
+                          onClick={() => handleDelete(loanType._id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
                           <TrashIcon className="h-5 w-5" />
                         </button>
                       </div>
@@ -358,7 +505,7 @@ const LoanTypes = () => {
                       {currentLoanType ? 'Edit Loan Type' : 'Add New Loan Type'}
                     </h3>
                     <div className="mt-4">
-                      <form className="space-y-4">
+                      <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                           <label htmlFor="loanName" className="block text-sm font-medium text-gray-700">
                             Loan Name
@@ -368,7 +515,8 @@ const LoanTypes = () => {
                             name="loanName"
                             id="loanName"
                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            defaultValue={currentLoanType?.loanName || ''}
+                            value={formData.loanName}
+                            onChange={handleInputChange}
                           />
                         </div>
                         
@@ -381,7 +529,8 @@ const LoanTypes = () => {
                               name="loanCategory"
                               id="loanCategory"
                               className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                              defaultValue={currentLoanType?.loanCategory || ''}
+                              value={formData.loanCategory}
+                              onChange={handleInputChange}
                             >
                               <option value="personal">Personal</option>
                               <option value="home">Home</option>
@@ -402,7 +551,8 @@ const LoanTypes = () => {
                               name="status"
                               id="status"
                               className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                              defaultValue={currentLoanType?.status || 'active'}
+                              value={formData.status}
+                              onChange={handleInputChange}
                             >
                               <option value="active">Active</option>
                               <option value="inactive">Inactive</option>
@@ -420,7 +570,8 @@ const LoanTypes = () => {
                               name="minAmount"
                               id="minAmount"
                               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                              defaultValue={currentLoanType?.minAmount || ''}
+                              value={formData.minAmount}
+                              onChange={handleInputChange}
                             />
                           </div>
                           
@@ -433,65 +584,70 @@ const LoanTypes = () => {
                               name="maxAmount"
                               id="maxAmount"
                               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                              defaultValue={currentLoanType?.maxAmount || ''}
+                              value={formData.maxAmount}
+                              onChange={handleInputChange}
                             />
                           </div>
                         </div>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <label htmlFor="minInterest" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="interestRate.min" className="block text-sm font-medium text-gray-700">
                               Min Interest Rate (%)
                             </label>
                             <input
                               type="number"
-                              name="minInterest"
-                              id="minInterest"
+                              name="interestRate.min"
+                              id="interestRate.min"
                               step="0.1"
                               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                              defaultValue={currentLoanType?.interestRate?.min || ''}
+                              value={formData.interestRate.min}
+                              onChange={handleInputChange}
                             />
                           </div>
                           
                           <div>
-                            <label htmlFor="maxInterest" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="interestRate.max" className="block text-sm font-medium text-gray-700">
                               Max Interest Rate (%)
                             </label>
                             <input
                               type="number"
-                              name="maxInterest"
-                              id="maxInterest"
+                              name="interestRate.max"
+                              id="interestRate.max"
                               step="0.1"
                               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                              defaultValue={currentLoanType?.interestRate?.max || ''}
+                              value={formData.interestRate.max}
+                              onChange={handleInputChange}
                             />
                           </div>
                         </div>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <label htmlFor="minTenure" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="tenure.minMonths" className="block text-sm font-medium text-gray-700">
                               Min Tenure (months)
                             </label>
                             <input
                               type="number"
-                              name="minTenure"
-                              id="minTenure"
+                              name="tenure.minMonths"
+                              id="tenure.minMonths"
                               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                              defaultValue={currentLoanType?.tenure?.minMonths || ''}
+                              value={formData.tenure.minMonths}
+                              onChange={handleInputChange}
                             />
                           </div>
                           
                           <div>
-                            <label htmlFor="maxTenure" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="tenure.maxMonths" className="block text-sm font-medium text-gray-700">
                               Max Tenure (months)
                             </label>
                             <input
                               type="number"
-                              name="maxTenure"
-                              id="maxTenure"
+                              name="tenure.maxMonths"
+                              id="tenure.maxMonths"
                               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                              defaultValue={currentLoanType?.tenure?.maxMonths || ''}
+                              value={formData.tenure.maxMonths}
+                              onChange={handleInputChange}
                             />
                           </div>
                         </div>
@@ -505,7 +661,8 @@ const LoanTypes = () => {
                             name="processingFee"
                             id="processingFee"
                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            defaultValue={currentLoanType?.processingFee || ''}
+                            value={formData.processingFee}
+                            onChange={handleInputChange}
                           />
                         </div>
                       </form>
@@ -515,7 +672,7 @@ const LoanTypes = () => {
               </div>
               <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <button
-                  type="button"
+                  type="submit"
                   className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
                 >
                   {currentLoanType ? 'Update' : 'Create'}
