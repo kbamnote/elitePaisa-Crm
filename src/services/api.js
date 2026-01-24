@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Cookies from 'js-cookie';
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -12,7 +13,7 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('adminToken');
+    const token = Cookies.get('adminToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -29,7 +30,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Clear token and redirect to login if unauthorized
-      localStorage.removeItem('adminToken');
+      Cookies.remove('adminToken');
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -40,8 +41,8 @@ api.interceptors.response.use(
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
   logout: () => {
-    // Remove token from localStorage
-    localStorage.removeItem('adminToken');
+    // Remove token from cookies
+    Cookies.remove('adminToken');
     // Optionally call backend logout endpoint if available
     // return api.post('/auth/logout');
     return Promise.resolve({ success: true, message: 'Logged out successfully' });
@@ -78,15 +79,20 @@ export const loanTypesAPI = {
 // Customers API
 export const customersAPI = {
   getAll: (params) => api.get('/profile/all', { params }),
-  getById: (id) => api.get(`/profile/${id}`),
+  getById: (id) => api.get(`/profile/detail/${id}`),
+  delete: (id) => {
+    console.log('Making DELETE request to:', `/profile/${id}`);
+    return api.delete(`/profile/${id}`);
+  },
 };
 
-// Analytics API
-export const analyticsAPI = {
-  getStats: () => api.get('/analytics/stats'),
-  getApplicationsByStatus: () => api.get('/analytics/applications-by-status'),
-  getApplicationsByLoanType: () => api.get('/analytics/applications-by-loan-type'),
-  getMonthlyTrends: () => api.get('/analytics/monthly-trends'),
+// Dashboard API
+export const dashboardAPI = {
+  getStats: () => api.get('/dashboard/stats'),
+  getRecentApplications: (params) => api.get('/dashboard/recent-applications', { params }),
+  getApplicationsByStatus: () => api.get('/dashboard/applications-by-status'),
+  getApplicationsByLoanType: () => api.get('/dashboard/applications-by-loan-type'),
+  getMonthlyTrends: (params) => api.get('/dashboard/monthly-trends', { params }),
 };
 
 export default api;

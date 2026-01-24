@@ -1,16 +1,18 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout';
-import Login from './components/Login';
-import Dashboard from './components/Dashboard';
-import LoanApplications from './components/LoanApplications';
-import LoanTypes from './components/LoanTypes';
-import Customers from './components/Customers';
+import Cookies from 'js-cookie';
+import Layout from './components/common/Layout';
+import Login from './components/auth/Login';
+import Dashboard from './components/pages/Dashboard';
+import LoanApplications from './components/pages/LoanApplications';
+import LoanTypes from './components/pages/LoanTypes';
+import Customers from './components/pages/Customers';
+import CustomerDetail from './components/pages/CustomerDetail';
 import Analytics from './components/Analytics';
 import Settings from './components/Settings';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem('adminToken');
+  const token = Cookies.get('adminToken');
   const isAuthenticated = !!token;
   
   if (!isAuthenticated) {
@@ -22,7 +24,7 @@ const ProtectedRoute = ({ children }) => {
 
 // Public Route Component for Login
 const PublicRoute = ({ children }) => {
-  const token = localStorage.getItem('adminToken');
+  const token = Cookies.get('adminToken');
   const isAuthenticated = !!token;
   
   if (isAuthenticated) {
@@ -52,6 +54,7 @@ function App() {
                   <Route path="/loan-applications" element={<LoanApplications />} />
                   <Route path="/loan-types" element={<LoanTypes />} />
                   <Route path="/customers" element={<Customers />} />
+                  <Route path="/customers/:id" element={<CustomerDetail />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/settings" element={<Settings />} />
                 </Routes>

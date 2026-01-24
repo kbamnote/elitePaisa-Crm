@@ -1,5 +1,5 @@
 import { BellIcon, MagnifyingGlassIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
-import { authAPI } from '../services/api';
+import { authAPI } from '../../services/api';
 
 const Header = ({ toggleSidebar }) => {
   const handleLogout = async () => {

@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { useState, useEffect } from 'react';
-import { loanTypesAPI } from '../services/api';
+import { loanTypesAPI } from '../../services/api';
 import {
   CreditCardIcon,
   PlusIcon,

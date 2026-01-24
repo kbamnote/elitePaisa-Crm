@@ -8,7 +8,7 @@ import {
   ArrowTrendingDownIcon,
   DocumentTextIcon
 } from '@heroicons/react/24/outline';
-import { analyticsAPI, loanApplicationsAPI } from '../services/api';
+import { dashboardAPI, loanApplicationsAPI } from '../../services/api';
 
 const Dashboard = () => {
   const [stats, setStats] = useState([
@@ -49,56 +49,56 @@ const Dashboard = () => {
   const [recentApplications, setRecentApplications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Load analytics data from API
+  // Load dashboard data from API
   useEffect(() => {
-    const fetchAnalytics = async () => {
+    const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
-        
-        // Fetch stats
-        const statsResponse = await analyticsAPI.getStats();
+            
+        // Fetch dashboard stats
+        const statsResponse = await dashboardAPI.getStats();
         const statsData = statsResponse.data.stats || {};
-        
+            
         const formattedStats = [
           {
             title: 'Total Applications',
             value: statsData.totalApplications?.toLocaleString() || '0',
-            change: `+${statsData.applicationsGrowth || '0'}%`,
+            change: '+5%',
             changeType: 'positive',
             icon: DocumentTextIcon,
             color: 'bg-blue-500',
           },
           {
-            title: 'Active Loans',
-            value: statsData.activeLoans?.toLocaleString() || '0',
-            change: `+${statsData.loansGrowth || '0'}%`,
+            title: 'Pending Applications',
+            value: statsData.pendingApplications?.toLocaleString() || '0',
+            change: '+2%',
+            changeType: 'positive',
+            icon: ChartBarIcon,
+            color: 'bg-yellow-500',
+          },
+          {
+            title: 'Approved Applications',
+            value: statsData.approvedApplications?.toLocaleString() || '0',
+            change: '+8%',
             changeType: 'positive',
             icon: CreditCardIcon,
             color: 'bg-green-500',
           },
           {
-            title: 'Total Disbursed',
-            value: statsData.totalDisbursed ? `₹${(statsData.totalDisbursed / 10000000).toFixed(1)}Cr` : '₹0Cr',
-            change: `+${statsData.disbursementGrowth || '0'}%`,
+            title: 'Total Clients',
+            value: statsData.totalClients?.toLocaleString() || '0',
+            change: '+3%',
             changeType: 'positive',
-            icon: BanknotesIcon,
+            icon: UserGroupIcon,
             color: 'bg-purple-500',
-          },
-          {
-            title: 'Pending Approvals',
-            value: statsData.pendingApprovals?.toLocaleString() || '0',
-            change: `-${Math.abs(statsData.pendingChange || 0)}%`,
-            changeType: 'negative',
-            icon: ChartBarIcon,
-            color: 'bg-yellow-500',
           },
         ];
         setStats(formattedStats);
-        
+            
         // Fetch recent applications
-        const applicationsResponse = await loanApplicationsAPI.getAll({ limit: 5, sort: '-appliedAt' });
-        const recentApps = applicationsResponse.data.loanApplications?.slice(0, 5) || [];
-        
+        const recentAppsResponse = await dashboardAPI.getRecentApplications({ limit: 5 });
+        const recentApps = recentAppsResponse.data.recentApplications || [];
+            
         const formattedApplications = recentApps.map(app => ({
           id: app._id,
           customer: app.authId?.fullName || 'N/A',
@@ -107,11 +107,11 @@ const Dashboard = () => {
           status: app.applicationStatus || 'Unknown',
           date: new Date(app.appliedAt).toISOString().split('T')[0],
         }));
-        
+            
         setRecentApplications(formattedApplications);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
-        
+            
         // Set empty arrays on error
         setStats([
           {
@@ -123,7 +123,15 @@ const Dashboard = () => {
             color: 'bg-blue-500',
           },
           {
-            title: 'Active Loans',
+            title: 'Pending Applications',
+            value: '0',
+            change: '+0%',
+            changeType: 'positive',
+            icon: ChartBarIcon,
+            color: 'bg-yellow-500',
+          },
+          {
+            title: 'Approved Applications',
             value: '0',
             change: '+0%',
             changeType: 'positive',
@@ -131,20 +139,12 @@ const Dashboard = () => {
             color: 'bg-green-500',
           },
           {
-            title: 'Total Disbursed',
-            value: '₹0',
+            title: 'Total Clients',
+            value: '0',
             change: '+0%',
             changeType: 'positive',
-            icon: BanknotesIcon,
+            icon: UserGroupIcon,
             color: 'bg-purple-500',
-          },
-          {
-            title: 'Pending Approvals',
-            value: '0',
-            change: '-0%',
-            changeType: 'negative',
-            icon: ChartBarIcon,
-            color: 'bg-yellow-500',
           },
         ]);
         setRecentApplications([]);
@@ -152,8 +152,8 @@ const Dashboard = () => {
         setIsLoading(false);
       }
     };
-    
-    fetchAnalytics();
+        
+    fetchDashboardData();
   }, []);
 
   if (isLoading) {
@@ -166,10 +166,6 @@ const Dashboard = () => {
   
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">Welcome back! Here's what's happening today.</p>
-      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { loanApplicationsAPI } from '../services/api';
+import { loanApplicationsAPI } from '../../services/api';
 import { 
   DocumentTextIcon, 
   FunnelIcon, 

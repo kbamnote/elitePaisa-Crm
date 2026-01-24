@@ -1,20 +1,31 @@
 import { useState, useEffect } from 'react';
-import { customersAPI } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { customersAPI } from '../../services/api';
+import DeleteModal from '../common/modals/DeleteModal';
+import SuccessModal from '../common/modals/SuccessModal';
 import { 
   UserGroupIcon, 
   MagnifyingGlassIcon, 
   PhoneIcon, 
   EnvelopeIcon,
   MapPinIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  TrashIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 
 const Customers = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [filters, setFilters] = useState({
     search: ''
   });
+  const navigate = useNavigate();
 
   // Load customers from API
   useEffect(() => {
@@ -27,7 +38,6 @@ const Customers = () => {
         console.log('API Response:', response);
         // Handle the response structure: { success: true, profiles: [...] }
         const userData = response.data.profiles || [];
-        console.log('Setting customers data:', userData);
         setCustomers(userData);
       } catch (error) {
         console.error('Error fetching customers:', error);
@@ -91,6 +101,79 @@ const Customers = () => {
     }));
   };
 
+  const handleViewCustomer = (customerId) => {
+    navigate(`/customers/${customerId}`);
+  };
+
+  const handleDeleteCustomer = (customerId) => {
+    const customer = customers.find(c => (c._id || c.id || c.authId?._id || c.authId?.id) === customerId);
+    setCustomerToDelete(customer);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteCustomer = async () => {
+    if (!customerToDelete) return;
+    
+    const customerId = customerToDelete._id || customerToDelete.id || customerToDelete.authId?._id || customerToDelete.authId?.id;
+    
+    try {
+      setDeletingId(customerId);
+      console.log('Attempting to delete customer with ID:', customerId);
+      console.log('Full customerToDelete object:', customerToDelete);
+      
+      const response = await customersAPI.delete(customerId);
+      console.log('Delete response status:', response.status);
+      console.log('Delete response data:', response.data);
+      
+      // Remove the customer from the list
+      setCustomers(prev => prev.filter(customer => 
+        (customer._id || customer.id || customer.authId?._id || customer.authId?.id) !== customerId
+      ));
+      
+      setShowDeleteModal(false);
+      setCustomerToDelete(null);
+      
+      // Show success modal
+      setSuccessMessage('Customer deleted successfully!');
+      setShowSuccessModal(true);
+      
+      // Refresh the customer list after a short delay
+      setTimeout(async () => {
+        try {
+          const refreshResponse = await customersAPI.getAll(filters);
+          const userData = refreshResponse.data.profiles || [];
+          setCustomers(userData);
+        } catch (refreshError) {
+          console.error('Error refreshing customer list:', refreshError);
+        }
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Error deleting customer:', error);
+      console.error('Error response:', error.response);
+      console.error('Error message:', error.message);
+      console.error('Error code:', error.code);
+      
+      let errorMessage = 'Unknown error';
+      if (error.response) {
+        errorMessage = error.response.data?.message || `HTTP ${error.response.status}: ${error.response.statusText}`;
+      } else if (error.request) {
+        errorMessage = 'Network error: Unable to reach server';
+      } else {
+        errorMessage = error.message;
+      }
+      
+      alert(`Failed to delete customer. Error: ${errorMessage}`);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setCustomerToDelete(null);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -129,7 +212,7 @@ const Customers = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  User/Customer
+                  User
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Contact
@@ -138,63 +221,90 @@ const Customers = () => {
                   Identity
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Address
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Activity
+                  Date
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Action
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredCustomersData.length > 0 ? (
                 filteredCustomersData.map((customer, index) => (
-                  <tr key={customer._id || customer.id || customer.authId?._id || customer.authId?.id || index} className="hover:bg-gray-50">
+                  <tr 
+                    key={customer._id || customer.id || customer.authId?._id || customer.authId?.id || index} 
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleViewCustomer(customer._id || customer.id || customer.authId?._id || customer.authId?.id)}
+                  >
+                    {/* User Column */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
-                          <UserCircleIcon className="h-10 w-10 text-gray-400" />
+                          {customer.profilePic ? (
+                            <img
+                              src={customer.profilePic}
+                              alt="Profile"
+                              className="h-10 w-10 rounded-full object-cover border-2 border-gray-200"
+                            />
+                          ) : (
+                            <UserCircleIcon className="h-10 w-10 text-gray-400" />
+                          )}
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">{customer.fullName || customer.name || customer.authId?.fullName || customer.authId?.name || 'N/A'}</div>
-                          <div className="text-sm text-gray-500">{customer._id || customer.id || customer.authId?._id || customer.authId?.id || 'N/A'}</div>
-                          <div className="text-sm text-gray-500">Registered: {formatDate(customer.createdAt || customer.registeredAt || customer.authId?.createdAt || customer.authId?.registeredAt || 'N/A')}</div>
+                          <div className="text-sm text-gray-500">ID: {customer._id?.substring(0, 8) || customer.id?.substring(0, 8) || customer.authId?._id?.substring(0, 8) || customer.authId?.id?.substring(0, 8) || 'N/A'}</div>
                         </div>
                       </div>
                     </td>
+                    
+                    {/* Contact Column */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 flex items-center">
                         <EnvelopeIcon className="h-4 w-4 mr-1 text-gray-400" />
-                        {customer.email || customer.authId?.email || 'N/A'}
-                      </div>
+                        {customer.email || customer.authId?.email || 'N/A'}</div>
                       <div className="text-sm text-gray-500 flex items-center mt-1">
                         <PhoneIcon className="h-4 w-4 mr-1 text-gray-400" />
-                        {customer.phoneNo || customer.phoneNumber || customer.authId?.phoneNo || customer.authId?.phoneNumber || 'N/A'}
-                      </div>
+                        {customer.phoneNo || customer.phoneNumber || customer.authId?.phoneNo || customer.authId?.phoneNumber || 'N/A'}</div>
                     </td>
+                    
+                    {/* Identity Column */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">PAN: {customer.panNo || customer.panNumber || customer.authId?.panNo || customer.authId?.panNumber || 'N/A'}</div>
                       <div className="text-sm text-gray-500">Aadhaar: {(customer.adharNo || customer.aadhaarNumber || customer.authId?.adharNo || customer.authId?.aadhaarNumber)?.replace(/(\d{4})/g, '$1 ') || 'N/A'}</div>
                     </td>
+                    
+                    {/* Date Column */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 flex items-center">
-                        <MapPinIcon className="h-4 w-4 mr-1 text-gray-400" />
-                        {customer.address?.addressLine || customer.address?.fullAddress || customer.authId?.address?.addressLine || customer.authId?.address?.fullAddress || 'N/A'}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {customer.address?.city || customer.authId?.address?.city || 'N/A'}, {customer.address?.state || customer.authId?.address?.state || 'N/A'} - {customer.address?.pincode || customer.address?.zipCode || customer.authId?.address?.pincode || customer.authId?.address?.zipCode || 'N/A'}
-                      </div>
+                      <div className="text-sm text-gray-900">{formatDate(customer.createdAt || customer.registeredAt || customer.authId?.createdAt || customer.authId?.registeredAt || 'N/A')}</div>
+                      <div className="text-sm text-gray-500">{customer.updatedAt ? `Updated: ${formatDate(customer.updatedAt)}` : ''}</div>
                     </td>
+                    
+                    {/* Status Column */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">Total: {customer.totalLoans || customer.loanCount || 0}</div>
-                      <div className="text-sm text-gray-500">Active: {customer.activeLoans || customer.activeLoanCount || 0}</div>
-                      <div className="text-sm text-gray-900 font-medium">Disbursed: {formatCurrency(customer.totalDisbursed || customer.totalDisbursedAmount || 0)}</div>
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(customer.status || customer.role || customer.authId?.status || customer.authId?.role || 'active')}`}>
+                        {(customer.status || customer.role || customer.authId?.status || customer.authId?.role || 'active')?.charAt(0).toUpperCase() + (customer.status || customer.role || customer.authId?.status || customer.authId?.role || 'active')?.slice(1)}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(customer.status || customer.role || customer.authId?.status || customer.authId?.role || 'N/A')}`}>
-                        {(customer.status || customer.role || customer.authId?.status || customer.authId?.role || 'N/A')?.charAt(0).toUpperCase() + (customer.status || customer.role || customer.authId?.status || customer.authId?.role || 'N/A')?.slice(1)}</span>
+                    
+                    {/* Action Column */}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteCustomer(customer._id || customer.id || customer.authId?._id || customer.authId?.id);
+                        }}
+                        disabled={deletingId === (customer._id || customer.id || customer.authId?._id || customer.authId?.id)}
+                        className="text-red-600 hover:text-red-900 flex items-center disabled:opacity-50"
+                      >
+                        {deletingId === (customer._id || customer.id || customer.authId?._id || customer.authId?.id) ? (
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+                        ) : (
+                          <TrashIcon className="h-5 w-5" />
+                        )}
+                        <span className="ml-1 hidden md:inline">Delete</span>
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -248,6 +358,25 @@ const Customers = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Modal */}
+      <DeleteModal
+        isOpen={showDeleteModal}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDeleteCustomer}
+        title="Delete Customer"
+        message={`Are you sure you want to delete ${customerToDelete?.fullName || customerToDelete?.name || customerToDelete?.authId?.fullName || customerToDelete?.authId?.name || 'this customer'}? This action cannot be undone.`}
+        confirmText="Delete Customer"
+        cancelText="Cancel"
+        isLoading={deletingId !== null}
+      />
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Success!"
+        message={successMessage}
+        confirmText="OK"
+      />
     </div>
   );
 };

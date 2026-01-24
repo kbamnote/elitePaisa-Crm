@@ -7,7 +7,7 @@ import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon
 } from '@heroicons/react/24/outline';
-import { analyticsAPI } from '../services/api';
+import { dashboardAPI } from '../services/api';
 
 const Analytics = () => {
   const [stats, setStats] = useState({
@@ -33,24 +33,57 @@ const Analytics = () => {
     const fetchAnalytics = async () => {
       try {
         setLoading(true);
-        const response = await analyticsAPI.getStats();
+            
+        // Fetch dashboard stats
+        const response = await dashboardAPI.getStats();
         const apiStats = response.data.stats || {};
-        setStats({
+            
+        // For some stats not available in the API, we'll calculate them
+        const calculatedStats = {
           totalApplications: apiStats.totalApplications || 0,
           approvedApplications: apiStats.approvedApplications || 0,
           rejectedApplications: apiStats.rejectedApplications || 0,
           pendingApplications: apiStats.pendingApplications || 0,
-          disbursedApplications: apiStats.disbursedApplications || 0,
-          totalDisbursed: apiStats.totalDisbursed || 0,
-          activeLoans: apiStats.activeLoans || 0,
-          avgProcessingTime: apiStats.avgProcessingTime || 0,
-          personalLoans: apiStats.personalLoans || 0,
-          homeLoans: apiStats.homeLoans || 0,
-          vehicleLoans: apiStats.vehicleLoans || 0,
-          businessLoans: apiStats.businessLoans || 0,
-          educationLoans: apiStats.educationLoans || 0,
-          monthlyTrends: apiStats.monthlyTrends || []
-        });
+          disbursedApplications: apiStats.approvedApplications || 0, // Approximation
+          totalDisbursed: 0, // Need to get this from somewhere else
+          activeLoans: apiStats.approvedApplications || 0, // Approximation
+          avgProcessingTime: 3, // Placeholder
+          personalLoans: 0, // Need to get from loan type breakdown
+          homeLoans: 0, // Need to get from loan type breakdown
+          vehicleLoans: 0, // Need to get from loan type breakdown
+          businessLoans: 0, // Need to get from loan type breakdown
+          educationLoans: 0, // Need to get from loan type breakdown
+          monthlyTrends: [] // Will fetch separately
+        };
+            
+        // Fetch loan types breakdown
+        try {
+          const loanTypesResponse = await dashboardAPI.getApplicationsByLoanType();
+          const loanTypesData = loanTypesResponse.data.applicationsByLoanType || [];
+              
+          // Map loan types to the stats
+          loanTypesData.forEach(item => {
+            const loanTypeName = item._id.toLowerCase();
+            if (loanTypeName.includes('personal')) calculatedStats.personalLoans = item.count;
+            else if (loanTypeName.includes('home')) calculatedStats.homeLoans = item.count;
+            else if (loanTypeName.includes('vehicle') || loanTypeName.includes('car')) calculatedStats.vehicleLoans = item.count;
+            else if (loanTypeName.includes('business')) calculatedStats.businessLoans = item.count;
+            else if (loanTypeName.includes('education')) calculatedStats.educationLoans = item.count;
+          });
+        } catch (loanTypesError) {
+          console.error('Error fetching loan types breakdown:', loanTypesError);
+        }
+            
+        // Fetch monthly trends
+        try {
+          const monthlyResponse = await dashboardAPI.getMonthlyTrends({ months: 12 });
+          const monthlyData = monthlyResponse.data.monthlyTrends || [];
+          calculatedStats.monthlyTrends = monthlyData.map(item => item.count);
+        } catch (monthlyError) {
+          console.error('Error fetching monthly trends:', monthlyError);
+        }
+            
+        setStats(calculatedStats);
       } catch (error) {
         console.error('Error fetching analytics:', error);
         // Set empty/default values on error
@@ -74,7 +107,7 @@ const Analytics = () => {
         setLoading(false);
       }
     };
-    
+        
     fetchAnalytics();
   }, []);
 
