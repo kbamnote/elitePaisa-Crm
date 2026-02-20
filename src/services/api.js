@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: 'https://elite-paisa-backend-production.up.railway.app/api', // Elite Paisa backend base URL
+  baseURL: 'https://api.elitepaisa.com/api', // Elite Paisa backend base URL
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
