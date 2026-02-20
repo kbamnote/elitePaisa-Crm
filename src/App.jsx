@@ -4,6 +4,7 @@ import Layout from './components/common/Layout';
 import Login from './components/auth/Login';
 import Dashboard from './components/pages/Dashboard';
 import LoanApplications from './components/pages/LoanApplications';
+import ApplicationDetail from './components/pages/ApplicationDetail';
 import LoanTypes from './components/pages/LoanTypes';
 import Customers from './components/pages/Customers';
 import CustomerDetail from './components/pages/CustomerDetail';
@@ -52,6 +53,7 @@ function App() {
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/loan-applications" element={<LoanApplications />} />
+                  <Route path="/loan-applications/:id" element={<ApplicationDetail />} />
                   <Route path="/loan-types" element={<LoanTypes />} />
                   <Route path="/customers" element={<Customers />} />
                   <Route path="/customers/:id" element={<CustomerDetail />} />

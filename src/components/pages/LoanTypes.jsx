@@ -10,7 +10,12 @@ import {
   FunnelIcon,
   MagnifyingGlassIcon,
   CheckCircleIcon,
-  XCircleIcon
+  XCircleIcon,
+  XMarkIcon,
+  CurrencyRupeeIcon,
+  CalendarIcon,
+  PercentBadgeIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 
 const LoanTypes = () => {
@@ -55,7 +60,7 @@ const LoanTypes = () => {
     };
 
     fetchLoanTypes();
-  }, [filters.category, filters.status, filters.search]); // FIX #1: Proper dependencies
+  }, [filters.category, filters.status, filters.search]);
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -258,7 +263,6 @@ const LoanTypes = () => {
     });
   };
 
-  // FIX #2: Apply filters in the component, not in a separate variable
   const filteredLoanTypes = loanTypes.filter(loanType => {
     if (filters.category && loanType.loanCategory !== filters.category) {
       return false;
@@ -455,183 +459,262 @@ const LoanTypes = () => {
         </div>
       </div>
 
-      {/* Modal for Add/Edit Loan Type */}
+      {/* Modern Modal for Add/Edit Loan Type */}
       {showModal && (
         <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200"
           onClick={closeModal}
         >
           <div
-            className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">
+            {/* Header */}
+            <div className="relative bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6 text-white">
+              <button
+                onClick={closeModal}
+                className="absolute right-6 top-6 p-1.5 rounded-lg hover:bg-white/20 transition-colors"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+              <h2 className="text-2xl font-bold">
                 {currentLoanType ? 'Edit Loan Type' : 'Add New Loan Type'}
-              </h3>
+              </h2>
+              <p className="text-indigo-100 text-sm mt-1">
+                Configure loan parameters and requirements
+              </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="px-6 py-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Loan Name
-                  </label>
-                  <input
-                    type="text"
-                    name="loanName"
-                    value={formData.loanName}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    required
-                  />
-                </div>
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="px-8 py-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+              {/* Basic Information */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <DocumentTextIcon className="w-5 h-5 text-indigo-600" />
+                  Basic Information
+                </h3>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Loan Name
+                    </label>
+                    <input
+                      type="text"
+                      name="loanName"
+                      value={formData.loanName}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Home Loan Premium"
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow outline-none text-sm"
+                      required
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Category
-                  </label>
-                  <select
-                    name="loanCategory"
-                    value={formData.loanCategory}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  >
-                    <option value="personal">Personal</option>
-                    <option value="home">Home</option>
-                    <option value="vehicle">Vehicle</option>
-                    <option value="business">Business</option>
-                    <option value="education">Education</option>
-                    <option value="agriculture">Agriculture</option>
-                    <option value="gold">Gold</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Category
+                    </label>
+                    <select
+                      name="loanCategory"
+                      value={formData.loanCategory}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow outline-none text-sm bg-white"
+                    >
+                      <option value="personal">Personal</option>
+                      <option value="home">Home</option>
+                      <option value="vehicle">Vehicle</option>
+                      <option value="business">Business</option>
+                      <option value="education">Education</option>
+                      <option value="agriculture">Agriculture</option>
+                      <option value="gold">Gold</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Minimum Amount (₹)
-                  </label>
-                  <input
-                    type="number"
-                    name="minAmount"
-                    value={formData.minAmount}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Maximum Amount (₹)
-                  </label>
-                  <input
-                    type="number"
-                    name="maxAmount"
-                    value={formData.maxAmount}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Min Interest Rate (%)
-                  </label>
-                  <input
-                    type="number"
-                    name="interestRate.min"
-                    value={formData.interestRate.min}
-                    onChange={handleInputChange}
-                    step="0.01"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Max Interest Rate (%)
-                  </label>
-                  <input
-                    type="number"
-                    name="interestRate.max"
-                    value={formData.interestRate.max}
-                    onChange={handleInputChange}
-                    step="0.01"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Min Tenure (months)
-                  </label>
-                  <input
-                    type="number"
-                    name="tenure.minMonths"
-                    value={formData.tenure.minMonths}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Max Tenure (months)
-                  </label>
-                  <input
-                    type="number"
-                    name="tenure.maxMonths"
-                    value={formData.tenure.maxMonths}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Processing Fee
-                  </label>
-                  <input
-                    type="text"
-                    name="processingFee"
-                    value={formData.processingFee}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <div className="relative">
+                      <select
+                        name="status"
+                        value={formData.status}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow outline-none text-sm bg-white appearance-none"
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                      <div className={`absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full ${formData.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end gap-3">
+              {/* Loan Amount */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <CurrencyRupeeIcon className="w-5 h-5 text-indigo-600" />
+                  Loan Amount
+                </h3>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <div className="relative">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Minimum Amount
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₹</span>
+                      <input
+                        type="number"
+                        name="minAmount"
+                        value={formData.minAmount}
+                        onChange={handleInputChange}
+                        placeholder="50,000"
+                        className="w-full pl-8 pr-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow outline-none text-sm"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Maximum Amount
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">₹</span>
+                      <input
+                        type="number"
+                        name="maxAmount"
+                        value={formData.maxAmount}
+                        onChange={handleInputChange}
+                        placeholder="10,00,000"
+                        className="w-full pl-8 pr-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow outline-none text-sm"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Interest Rate */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <PercentBadgeIcon className="w-5 h-5 text-indigo-600" />
+                  Interest Rate
+                </h3>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Minimum Rate
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="interestRate.min"
+                        value={formData.interestRate.min}
+                        onChange={handleInputChange}
+                        step="0.01"
+                        placeholder="8.5"
+                        className="w-full px-4 pr-10 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow outline-none text-sm"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">%</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Maximum Rate
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="interestRate.max"
+                        value={formData.interestRate.max}
+                        onChange={handleInputChange}
+                        step="0.01"
+                        placeholder="12.0"
+                        className="w-full px-4 pr-10 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow outline-none text-sm"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tenure */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <CalendarIcon className="w-5 h-5 text-indigo-600" />
+                  Loan Tenure
+                </h3>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Minimum Tenure
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="tenure.minMonths"
+                        value={formData.tenure.minMonths}
+                        onChange={handleInputChange}
+                        placeholder="12"
+                        className="w-full px-4 pr-20 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow outline-none text-sm"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">months</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Maximum Tenure
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="tenure.maxMonths"
+                        value={formData.tenure.maxMonths}
+                        onChange={handleInputChange}
+                        placeholder="240"
+                        className="w-full px-4 pr-20 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow outline-none text-sm"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">months</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Processing Fee */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Processing Fee
+                </label>
+                <input
+                  type="text"
+                  name="processingFee"
+                  value={formData.processingFee}
+                  onChange={handleInputChange}
+                  placeholder="e.g., 1% of loan amount or ₹5,000"
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow outline-none text-sm"
+                />
+                <p className="mt-1.5 text-xs text-gray-500">
+                  Specify as percentage or fixed amount
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-6 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/30 text-sm"
                 >
-                  {currentLoanType ? 'Update' : 'Create'}
+                  {currentLoanType ? 'Update Loan Type' : 'Create Loan Type'}
                 </button>
               </div>
             </form>
